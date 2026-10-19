@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 应用用户数据（便携版，EXE 同级目录）
+/settings.json
+/user_data/

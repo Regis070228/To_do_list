@@ -4,12 +4,16 @@
 - 不导入 PyQt6，不写界面逻辑，不处理任务排序或提醒判断。
 - 所有路径都来自 config.py，禁止在业务代码里手写相对路径。
 
-运行时的用户数据目录（由本模块按需创建）：
-    %LOCALAPPDATA%/ToDoList/
+运行时的用户数据目录（便携版，与 EXE 同级，由本模块按需创建）：
+    TodoList/                    # 用户解压的便携版文件夹
+    ├── TodoList.exe
     ├── settings.json
     └── user_data/
         ├── <taskset_uuid_1>.json
         └── <taskset_uuid_2>.json
+
+源码运行时该目录就是项目根目录，打包运行时是 EXE 所在目录；
+具体路径由 config.py 的 DATA_DIR / USER_DATA_DIR / SETTINGS_FILE 提供。
 
 单个任务集 JSON 的结构（schema_version=2）：
 {
