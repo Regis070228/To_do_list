@@ -20,12 +20,31 @@
     "completed_at": None,
 }
 
+使用说明（组员 B）：
+1. 只填写每个函数中标注“TODO”的位置；函数名、参数、返回类型和 docstring 都不要改。
+2. 不要导入 PyQt6，不要读写文件，不要写相对路径。
+
+完成一个函数后怎么做（按顺序执行）：
+1. 删除该函数最后的 raise NotImplementedError 那一行，换成真正的代码；
+2. 保留函数名、参数、返回类型和 docstring，不要改签名；
+3. 在项目根目录运行 python -c "import task_manager"，没有报错才说明语法正常；
+4. 用 docstring 里的“典型用例”调用一次，例如：
+       python -c "import task_manager as tm; tasks=[]; t=tm.add_task(tasks,'测试任务'); print(t)"
+   返回结果符合说明，才算这个函数完成；
+5. 还没写完的函数继续保留 raise，不要删掉后留下空函数；
+6. 只修改并提交 task_manager.py，提交信息用中文，
+   例如“实现任务增删改与三视图排序”；推送后告诉负责人哪些函数已完成。
+
+关于 raise NotImplementedError：
+    这是“功能尚未实现”的显式占位，不是错误代码，导入模块时不会执行。
+    只有函数被调用时才会抛出异常并立即停止，提醒你这里还没写完。
+    填好真正代码后删除这一行即可。
+
 开发约定：
-1. 函数签名和返回类型不要修改，UI 已按这些签名调用。
-2. 时间字符串统一使用 config.DUE_DATE_FORMAT（YYYY-MM-DDTHH:mm:00）。
-3. 优先级只能取 config.PRIORITIES，状态只能取 config.STATUSES。
-4. 只有明确标注“会修改传入数据”的函数才能修改列表或字典。
-5. 不需要写测试框架；docstring 里的“典型用例”用于手工验证。
+1. 时间字符串统一使用 config.DUE_DATE_FORMAT（YYYY-MM-DDTHH:mm:00）。
+2. 优先级只能取 config.PRIORITIES，状态只能取 config.STATUSES。
+3. 只有明确标注“会修改传入数据”的函数才能修改列表或字典。
+4. 不需要写测试框架；docstring 里的“典型用例”用于手工验证。
 """
 
 from __future__ import annotations
@@ -74,7 +93,10 @@ def add_task(tasks, title, priority="中", description="", due_date=None,
         - add_task([], "")：抛出 ValueError。
         - add_task([], "复习", due_date=None)：任务没有截止时间。
     """
-    raise NotImplementedError("add_task 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 add_task。
+    # 建议步骤：校验输入 → 生成 UUID 和当前时间 → 组装完整任务字典
+    #          → 追加到 tasks → 返回新任务。
+    raise NotImplementedError("add_task 尚未实现，请组员 B 在这里填写代码")
 
 
 def update_task(tasks, task_id, changes: dict) -> dict | None:
@@ -109,7 +131,10 @@ def update_task(tasks, task_id, changes: dict) -> dict | None:
         - update_task(tasks, task_id, {"due_date": None})：截止时间被清除。
         - update_task(tasks, "不存在的 ID", {"title": "x"})：返回 None，列表不变。
     """
-    raise NotImplementedError("update_task 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 update_task。
+    # 建议步骤：按 task_id 找到任务 → 校验 changes → 处理提醒字段重置
+    #          → 更新内容与 updated_at → 返回任务或 None。
+    raise NotImplementedError("update_task 尚未实现，请组员 B 在这里填写代码")
 
 
 def delete_task(tasks, task_id) -> bool:
@@ -136,7 +161,10 @@ def delete_task(tasks, task_id) -> bool:
         - delete_task(tasks, task_id)：任务存在时返回 True，列表长度减 1。
         - delete_task(tasks, "不存在的 ID")：返回 False，列表不变。
     """
-    raise NotImplementedError("delete_task 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 delete_task。
+    # 建议步骤：按 task_id 查找 → 找到则从 tasks 删除并返回 True，
+    #          找不到返回 False。
+    raise NotImplementedError("delete_task 尚未实现，请组员 B 在这里填写代码")
 
 
 def set_task_completed(tasks, task_id, completed=True) -> bool:
@@ -156,6 +184,10 @@ def set_task_completed(tasks, task_id, completed=True) -> bool:
     规则与边界：
         - 完成时写入当前时间到 completed_at。
         - 撤销完成时把 completed_at 置为 None。
+        - 撤销完成时同时把 reminder_configured_at 更新为当前时间，
+          但保留原有 reminder_sent_keys：已发过的提醒不重发，
+          撤销前已经过去、尚未处理的提醒也不追补。
+        - 完成时不要修改 reminder_configured_at 或 reminder_sent_keys。
         - 重复设置相同状态不刷新完成时间。
         - 状态变化时更新 updated_at。
 
@@ -165,9 +197,13 @@ def set_task_completed(tasks, task_id, completed=True) -> bool:
     典型用例：
         - set_task_completed(tasks, task_id, True)：completed_at 变为当前时间。
         - 再调用一次 set_task_completed(tasks, task_id, True)：completed_at 不变。
-        - set_task_completed(tasks, task_id, False)：completed_at 变为 None。
+        - set_task_completed(tasks, task_id, False)：completed_at 变为 None，
+          reminder_sent_keys 保留，reminder_configured_at 更新为撤销时间。
     """
-    raise NotImplementedError("set_task_completed 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 set_task_completed。
+    # 建议步骤：按 task_id 查找 → 状态未变则直接返回 → 维护 completed_at、
+    #          updated_at；撤销时还要更新 reminder_configured_at。
+    raise NotImplementedError("set_task_completed 尚未实现，请组员 B 在这里填写代码")
 
 
 def get_view_tasks(tasks, view="due_date") -> list:
@@ -201,7 +237,10 @@ def get_view_tasks(tasks, view="due_date") -> list:
         - get_view_tasks(tasks, "priority")：第一个任务是高优先级。
         - get_view_tasks(tasks, "completed")：最新完成的任务在最前面。
     """
-    raise NotImplementedError("get_view_tasks 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 get_view_tasks。
+    # 建议步骤：按 view 过滤未完成/已完成 → 用 sorted 按规则排序
+    #          → 返回新列表（不要改动原 tasks）。
+    raise NotImplementedError("get_view_tasks 尚未实现，请组员 B 在这里填写代码")
 
 
 def get_task_statistics(tasks) -> dict:
@@ -229,4 +268,7 @@ def get_task_statistics(tasks) -> dict:
         - 空列表：{"total": 0, "pending": 0, "completed": 0, "completion_rate": 0}。
         - 2 个任务完成 1 个：完成率为 50。
     """
-    raise NotImplementedError("get_task_statistics 由组员 B 实现")
+    # TODO（组员 B）：在这里实现 get_task_statistics。
+    # 建议步骤：统计总数、未完成数、已完成数 → 计算完成率
+    #          → 返回包含四个键的字典。
+    raise NotImplementedError("get_task_statistics 尚未实现，请组员 B 在这里填写代码")

@@ -1,22 +1,43 @@
 """Windows 系统集成（组员 D / 项目负责人负责）。
 
-本模块只处理当前用户的开机自启项：
-- 使用 Windows 注册表 HKEY_CURRENT_USER 下的 Run 项。
-- 不需要管理员权限，不影响其他软件的自启项。
+本模块负责两件事：
+- 当前用户的开机自启查询、开启/关闭与路径修复；
+- Windows 原生 Toast 通知提交。
+
+约束：
+- 使用 HKEY_CURRENT_USER，不需要管理员权限。
+- 不影响其他软件的自启项。
 - 不导入 PyQt6，不读写任务集。
+- Toast 必须是 Windows 原生通知，不能用 PyQt 自定义窗口或
+  QSystemTrayIcon.showMessage() 代替。
 """
 
 from __future__ import annotations
 
 
-def get_autostart_state() -> bool:
-    """查询本程序是否已加入开机自启。
+def get_autostart_registered_path() -> str | None:
+    """返回注册表中本程序自启项记录的目标路径。
 
     返回：
-        注册表中存在本程序自启项时返回 True，否则返回 False。
+        已登记时返回完整目标路径字符串；未登记时返回 None。
+
+    规则与边界：
+        - 只读取本程序专属的自启项。
+        - 用于区分“未启用”和“已启用但路径需要修复”。
+    """
+    raise NotImplementedError("get_autostart_registered_path 由 D 实现")
+
+
+def get_autostart_state() -> bool:
+    """查询本程序当前是否已正常启用开机自启。
+
+    返回：
+        只有“已登记且注册路径与当前 EXE 路径一致”时返回 True；
+        未登记或路径不一致时返回 False。
 
     规则与边界：
         - 只检查本程序专属的注册表项名称。
+        - 路径不一致说明便携文件夹被移动，界面应显示“路径需修复”。
         - 读取失败时返回 False，由界面提示实际状态。
     """
     raise NotImplementedError("get_autostart_state 由 D 实现")
@@ -39,3 +60,42 @@ def set_autostart(enabled: bool, executable_path: str) -> None:
         - 注册表操作失败时抛出异常，由界面提示。
     """
     raise NotImplementedError("set_autostart 由 D 实现")
+
+
+def repair_autostart(executable_path: str) -> None:
+    """修复已存在但路径失效的本程序自启项。
+
+    参数：
+        executable_path: 当前便携 EXE 的绝对路径。
+
+    返回：
+        无返回值。
+
+    规则与边界：
+        - 仅在注册表中已有本程序自启项时更新路径。
+        - 如果从未开启自启，应抛出异常提示“请先开启开机自启”，
+          不能借修复操作擅自开启。
+        - 不修改 settings.json、user_data/ 或任务集。
+    """
+    raise NotImplementedError("repair_autostart 由 D 实现")
+
+
+def send_toast_notification(title: str, body: str) -> bool:
+    """提交一条 Windows 原生 Toast 通知。
+
+    参数：
+        title: 通知主标题（单任务时为任务标题，多任务时为汇总标题）。
+        body: 通知正文；单任务时包含截止时间和当时剩余时间。
+
+    返回：
+        系统成功接受通知提交时返回 True；失败返回 False。
+
+    规则与边界：
+        - 必须使用 Windows 原生 Toast，不使用 PyQt 弹窗，
+          也不使用 QSystemTrayIcon.showMessage() 冒充。
+        - 不添加自定义操作按钮，不绑定点击任务或完成任务的逻辑。
+        - 通知关闭由 Windows 提供，应用不自行绘制关闭按钮。
+        - 返回 True 只表示已提交，不代表用户已经看到。
+        - 失败时应提供可诊断的错误信息，界面不得误标记提醒已发送。
+    """
+    raise NotImplementedError("send_toast_notification 由 D 实现")

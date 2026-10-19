@@ -1,12 +1,16 @@
-"""全局配置：版本号、用户数据路径和公共常量。
+"""全局配置：版本号、便携版数据路径和公共常量。
 
 本文件只负责计算路径和定义常量，不创建目录、不读写文件。
 所有路径都是绝对路径；业务代码不要自己写 "./" 或 "../" 相对路径。
+
+便携版数据位置：
+- 源码运行：项目根目录（config.py 所在目录）
+- 打包运行：EXE 所在目录（sys.executable 的父目录）
+settings.json 与 user_data/ 都放在该目录下。
 """
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -17,19 +21,22 @@ APP_VERSION = "0.1.0"
 DATA_SCHEMA_VERSION = 2
 
 # ---------- 路径 ----------
-# 源码运行时为项目根目录；PyInstaller 打包后为资源解包目录。
-if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+_IS_FROZEN = getattr(sys, "frozen", False)
+
+# 资源文件：打包后位于 PyInstaller 解包目录；源码运行时为项目根目录。
+if _IS_FROZEN and hasattr(sys, "_MEIPASS"):
     RESOURCE_DIR = Path(sys._MEIPASS)
 else:
     RESOURCE_DIR = Path(__file__).resolve().parent
 
-_local_appdata = os.environ.get("LOCALAPPDATA")
-if _local_appdata:
-    DATA_DIR = Path(_local_appdata) / APP_NAME
+# 用户数据：便携版与 EXE 同级；源码运行时为项目根目录。
+# 不要把可写数据放到 sys._MEIPASS，那是打包后的临时目录。
+if _IS_FROZEN:
+    APP_DIR = Path(sys.executable).resolve().parent
 else:
-    # 兜底路径，主要方便非 Windows 环境做语法检查。
-    DATA_DIR = Path.home() / "AppData" / "Local" / APP_NAME
+    APP_DIR = Path(__file__).resolve().parent
 
+DATA_DIR = APP_DIR
 USER_DATA_DIR = DATA_DIR / "user_data"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 
@@ -67,6 +74,7 @@ DEFAULT_SETTINGS = {
     "reminders_enabled": True,
     "autostart_enabled": False,
     "close_to_tray": True,
+    "close_prompt_shown": False,
 }
 
 # ---------- 统一数据格式 ----------

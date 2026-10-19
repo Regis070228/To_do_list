@@ -173,3 +173,21 @@ def save_settings(settings: dict) -> None:
         - 使用临时文件替换，失败时保留原文件。
     """
     raise NotImplementedError("save_settings 由 D 实现")
+
+
+def initialize_user_data() -> dict:
+    """首次启动时初始化缺失的用户数据。
+
+    返回：
+        {"settings": 设置字典, "taskset": 当前活动任务集字典}
+
+    规则与边界：
+        - 按需创建 DATA_DIR、user_data/、settings.json 和默认任务集。
+        - user_data/ 已存在但没有任何任务集文件时，创建“我的任务”，
+          并把新任务集 ID 写入 active_taskset_id。
+        - 只能补建缺失的目录和文件；已存在的有效设置或任务集不得覆盖。
+        - 发现损坏或不兼容 JSON 时抛出异常并保留原文件，
+          不能当成空目录自动重建。
+        - 不做旧数据迁移，不删除或重置任何已有任务集。
+    """
+    raise NotImplementedError("initialize_user_data 由 D 实现")
