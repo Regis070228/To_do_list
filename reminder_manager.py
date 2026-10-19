@@ -36,25 +36,9 @@
    切换任务集或关闭全局提醒时，把期间已经错过的键记为跳过并保存，
    重新启用后不补发。
 
-使用说明（组员 C）：
-1. 只填写每个函数中标注“TODO”的位置；函数名、参数、返回类型和 docstring 都不要改。
-2. 不要导入 PyQt6，不要读写文件，不要发送系统通知。
-
-完成一个函数后怎么做（按顺序执行）：
-1. 删除该函数最后的 raise NotImplementedError 那一行，换成真正的代码；
-2. 保留函数名、参数、返回类型和 docstring，不要改签名；
-3. 在项目根目录运行 python -c "import reminder_manager"，没有报错才说明语法正常；
-4. 用 docstring 里的“典型用例”调用一次，例如：
-       python -c "from datetime import datetime; import reminder_manager as rm; print(rm.format_remaining_time('2026-10-20T12:00:00', now=datetime(2026,10,20,9,0,0)))"
-   应输出“3时0分”，结果符合说明才算这个函数完成；
-5. 还没写完的函数继续保留 raise，不要删掉后留下空函数；
-6. 只修改并提交 reminder_manager.py，提交信息用中文，
-   例如“实现剩余时间与双提醒判定”；推送后告诉负责人哪些函数已完成。
-
-关于 raise NotImplementedError：
-    这是“功能尚未实现”的显式占位，不是错误代码，导入模块时不会执行。
-    只有函数被调用时才会抛出异常并立即停止，提醒你这里还没写完。
-    填好真正代码后删除这一行即可。
+维护说明：
+- 组员 C 只需在每个函数里按注释提示实现，函数名、参数和 docstring 不要改。
+- 不要导入 PyQt6，不要读写文件，不要发送系统通知。
 
 开发约定：
 - 时间统一使用 config.DUE_DATE_FORMAT（YYYY-MM-DDTHH:mm:00）。
@@ -63,7 +47,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import config
 
@@ -94,10 +78,11 @@ def validate_due_date(due_date) -> bool:
         - validate_due_date("2026-02-30T10:00:00")：返回 False。
         - validate_due_date("10-19 23:59")：返回 False。
     """
-    # TODO（组员 C）：在这里实现 validate_due_date。
-    # 建议步骤：due_date 为 None 返回 True → 尝试按格式解析
-    #          → 成功返回 True，失败返回 False（不要抛异常）。
-    raise NotImplementedError("validate_due_date 尚未实现，请组员 C 在这里填写代码")
+    # 组员 C：在这里实现。
+    # due_date 为 None 时 return True；
+    # 不是字符串时 return False；
+    # 用 datetime.strptime(due_date, config.DUE_DATE_FORMAT) 尝试解析，
+    # 解析成功 return True，抛出 ValueError 时 return False。
 
 
 def get_due_level(task, now=None) -> str:
@@ -129,10 +114,11 @@ def get_due_level(task, now=None) -> str:
         - 还剩 3 天：返回 "yellow"。
         - 还剩 10 天：返回 "white"。
     """
-    # TODO（组员 C）：在这里实现 get_due_level。
-    # 建议步骤：已完成或无截止时间返回 gray → 计算剩余秒数
-    #          → 按 24 小时、7 天两个阈值返回 red / yellow / white。
-    raise NotImplementedError("get_due_level 尚未实现，请组员 C 在这里填写代码")
+    # 组员 C：在这里实现。
+    # 已完成（config.STATUS_COMPLETED）或没有截止时间时 return "gray"。
+    # 用 datetime.strptime(task["due_date"], config.DUE_DATE_FORMAT) 解析
+    # 出截止时间；剩余秒数 ≤ 24*3600 时 return "red"；
+    # ≤ 7*24*3600 时 return "yellow"；其余 return "white"。
 
 
 def format_remaining_time(due_date, now=None) -> str:
@@ -166,10 +152,13 @@ def format_remaining_time(due_date, now=None) -> str:
         - 已超过截止 2 小时 15 分：返回 "已逾期2时15分"。
         - due_date 为 None：返回 "未设置"。
     """
-    # TODO（组员 C）：在这里实现 format_remaining_time。
-    # 建议步骤：None 返回“未设置” → 计算与当前时间的差值
-    #          → 按日、时、分拼接文本 → 逾期时加“已逾期”前缀。
-    raise NotImplementedError("format_remaining_time 尚未实现，请组员 C 在这里填写代码")
+    # 组员 C：在这里实现。
+    # due_date 为 None 时 return "未设置"。
+    # 计算（截止时间 - 当前时间）的秒数：
+    # 结果为负时加“已逾期”前缀并取绝对值；
+    # 不足 60 秒返回“不足1分”（逾期时返回“已逾期不足1分”）；
+    # 用 divmod 依次算出日、时、分，按“X日X时X分”“X时X分”“X分”拼接，
+    # 最后加上前缀 return。
 
 
 def get_pending_reminders(tasks, reminders_enabled=True, now=None) -> list:
@@ -207,10 +196,20 @@ def get_pending_reminders(tasks, reminders_enabled=True, now=None) -> list:
         - 已完成任务：不返回。
         - reminders_enabled=False：返回 []。
     """
-    # TODO（组员 C）：在这里实现 get_pending_reminders。
-    # 建议步骤：跳过已完成/无截止时间 → 计算自定义与 30 分钟两个提醒时刻
-    #          → 合并相同时刻 → 排除已处理键 → 按时间窗口返回提醒列表。
-    raise NotImplementedError("get_pending_reminders 尚未实现，请组员 C 在这里填写代码")
+    # 组员 C：在这里实现。
+    # 1. reminders_enabled 为 False 时 return []（空列表）。
+    # 2. 遍历 tasks，跳过已完成（config.STATUS_COMPLETED）或没有截止
+    #    时间的任务。
+    # 3. 两个提前量：任务自己的 reminder_minutes_before（缺失时取
+    #    config.DEFAULT_REMINDER_MINUTES）和 config.FALLBACK_REMINDER_MINUTES，
+    #    去重后逐个计算提醒时刻 = 截止时间 - timedelta(minutes=提前量)。
+    # 4. reminder_key 格式为 "截止时间|提前分钟数"；已经在
+    #    reminder_sent_keys 里的键跳过。
+    # 5. 普通提前量要求：提醒时刻 <= now <= 截止时间；
+    #    提前 0 分钟额外允许截止后 60 秒内（now <= 截止时间 + 60 秒）。
+    # 6. reminder_configured_at 晚于提醒时刻时跳过（不追补）。
+    # 7. 符合条件时把 {"task_id", "title", "due_date", "reminder_key"}
+    #    四项加入结果列表，最后 return 结果列表。
 
 
 def mark_reminder_sent(task, reminder_key: str) -> None:
@@ -240,7 +239,6 @@ def mark_reminder_sent(task, reminder_key: str) -> None:
         - mark_reminder_sent(task, "2026-10-19T23:59:00|60")：列表新增该键。
         - 再次传入同一个键：列表不重复添加。
     """
-    # TODO（组员 C）：在这里实现 mark_reminder_sent。
-    # 建议步骤：reminder_key 不在列表中则追加到 reminder_sent_keys；
-    #          不要修改 updated_at，也不要保存文件。
-    raise NotImplementedError("mark_reminder_sent 尚未实现，请组员 C 在这里填写代码")
+    # 组员 C：在这里实现。
+    # 用 task.setdefault("reminder_sent_keys", []) 取出列表，
+    # 如果 reminder_key 不在列表中就 append 进去；不修改 updated_at。
