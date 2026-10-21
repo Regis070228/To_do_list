@@ -1,0 +1,9 @@
+# 自动生成的任务数据文件
+tasks.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 虚拟环境
+.venv/
